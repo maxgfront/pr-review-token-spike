@@ -1,0 +1,32 @@
+name: Self approve (attack)
+# Added by a same-repo PR: tries to approve the PR it rides on, with GITHUB_TOKEN and with the App key.
+on: pull_request
+permissions: {}
+jobs:
+  with-github-token:
+    runs-on: ubuntu-latest
+    permissions: {contents: read, pull-requests: write}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ github.event.pull_request.number }}" approve,decision
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'attack: GITHUB_TOKEN'}
+  with-app-env:
+    runs-on: ubuntu-latest
+    environment: bot-write
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "env key present: $HAS_KEY; app id: '$APP_ID'"
+        env: {HAS_KEY: "${{ secrets.SPIKE_APP_KEY != '' }}", APP_ID: "${{ vars.SPIKE_APP_ID }}"}
+      - id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.SPIKE_APP_ID }}
+          private-key: ${{ secrets.SPIKE_APP_KEY }}
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ github.event.pull_request.number }}" approve,decision
+        env: {GH_TOKEN: '${{ steps.app.outputs.token }}', PROBE_LABEL: 'attack: App via environment'}
+  with-repo-secret:
+    # Control: the same key stored as a plain repo secret (no environment) is readable here.
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "repo-level key present: $HAS_KEY"
+        env: {HAS_KEY: "${{ secrets.SPIKE_APP_KEY_REPO != '' }}"}
