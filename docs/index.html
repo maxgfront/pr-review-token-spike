@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><title>Register spike App</title>
+<body style="font-family:sans-serif;max-width:40em;margin:2em auto">
+<h1>Register the throwaway spike App</h1>
+<p>Creates a private GitHub App on your account with no webhook. Permissions: contents, pull requests and issues (write), metadata (read).</p>
+<form id="f" action="https://github.com/settings/apps/new?state=spike" method="post">
+<input type="hidden" name="manifest" id="m"><button type="submit">Create the App on GitHub</button></form>
+<script>
+document.getElementById('m').value = JSON.stringify({
+  name: 'maxgfront-token-spike',
+  url: 'https://github.com/maxgfront/pr-review-token-spike',
+  hook_attributes: {url: 'https://example.com/unused', active: false},
+  redirect_url: 'https://maxgfront.github.io/pr-review-token-spike/done.html',
+  public: false,
+  default_permissions: {contents: 'write', pull_requests: 'write', issues: 'write', metadata: 'read'},
+  default_events: []
+});
+</script></body>

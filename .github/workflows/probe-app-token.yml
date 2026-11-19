@@ -1,0 +1,41 @@
+name: Probe App token
+# Mints a GitHub App installation token scoped down per job and runs the bot's calls with it.
+# The App id and key live in the `bot-write` environment, deployable from main only.
+on:
+  workflow_dispatch:
+    inputs:
+      pr: {description: PR number, required: true}
+      steps: {description: probe steps, default: 'review,reply,read-thread,resolve,resolve-human,label,delete-pending'}
+      variants: {description: 'comma list of app-prw,app-prw-cw', default: 'app-prw,app-prw-cw'}
+permissions: {}
+jobs:
+  app-prw:
+    if: contains(format(',{0},', inputs.variants), ',app-prw,')
+    runs-on: ubuntu-latest
+    environment: bot-write
+    steps:
+      - uses: actions/checkout@v4
+      - id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.SPIKE_APP_ID }}
+          private-key: ${{ secrets.SPIKE_APP_KEY }}
+          permission-pull-requests: write
+          permission-contents: read
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ steps.app.outputs.token }}', PROBE_LABEL: 'App: contents:read pull-requests:write'}
+  app-prw-cw:
+    if: contains(format(',{0},', inputs.variants), ',app-prw-cw,')
+    runs-on: ubuntu-latest
+    environment: bot-write
+    steps:
+      - uses: actions/checkout@v4
+      - id: app
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.SPIKE_APP_ID }}
+          private-key: ${{ secrets.SPIKE_APP_KEY }}
+          permission-pull-requests: write
+          permission-contents: write
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ steps.app.outputs.token }}', PROBE_LABEL: 'App: contents:write pull-requests:write'}

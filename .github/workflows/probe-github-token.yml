@@ -1,0 +1,42 @@
+name: Probe GITHUB_TOKEN
+# Runs the bot's calls with GITHUB_TOKEN under different permissions blocks, one job each.
+on:
+  workflow_dispatch:
+    inputs:
+      pr: {description: PR number, required: true}
+      steps: {description: probe steps, default: 'review,reply,read-thread,resolve,resolve-human,label,delete-pending'}
+      variants: {description: 'jobs to run: comma list of read,prw,prw-cw,prw-only,prw-issw', default: 'read,prw,prw-cw,prw-only'}
+permissions: {}
+jobs:
+  read:
+    if: contains(format(',{0},', inputs.variants), ',read,')
+    runs-on: ubuntu-latest
+    permissions: {contents: read, pull-requests: read}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'contents:read pull-requests:read'}
+  prw:
+    if: contains(format(',{0},', inputs.variants), ',prw,')
+    runs-on: ubuntu-latest
+    permissions: {contents: read, pull-requests: write}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'contents:read pull-requests:write (today)'}
+  prw-cw:
+    if: contains(format(',{0},', inputs.variants), ',prw-cw,')
+    runs-on: ubuntu-latest
+    permissions: {contents: write, pull-requests: write}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'contents:write pull-requests:write'}
+  prw-only:
+    if: contains(format(',{0},', inputs.variants), ',prw-only,')
+    runs-on: ubuntu-latest
+    permissions: {pull-requests: write}
+    steps:
+      - run: curl -sSfL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/scripts/probe.js" -o probe.js
+      - run: node probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'pull-requests:write only (contents:none)'}
