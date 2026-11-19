@@ -40,3 +40,19 @@ jobs:
       - run: curl -sSfL "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/scripts/probe.js" -o probe.js
       - run: node probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
         env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'pull-requests:write only (contents:none)'}
+  prw-issw:
+    if: contains(format(',{0},', inputs.variants), ',prw-issw,')
+    runs-on: ubuntu-latest
+    permissions: {contents: read, pull-requests: write, issues: write}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'contents:read pull-requests:write issues:write'}
+  cw-prr:
+    if: contains(format(',{0},', inputs.variants), ',cw-prr,')
+    runs-on: ubuntu-latest
+    permissions: {contents: write, pull-requests: read}
+    steps:
+      - uses: actions/checkout@v4
+      - run: node scripts/probe.js "$GITHUB_REPOSITORY" "${{ inputs.pr }}" "${{ inputs.steps }}"
+        env: {GH_TOKEN: '${{ github.token }}', PROBE_LABEL: 'contents:write pull-requests:read'}
