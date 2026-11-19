@@ -1,0 +1,19 @@
+attack/self-approve.yml
+  s_443c8d02c8377a::t_687e49d56ff654 1-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0b7797df80d6c26672dd66f2d1376b1415fa4853",
+  "prompts": {},
+  "sessions": {
+    "s_443c8d02c8377a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "813143ed-c2d6-4cb0-b487-b0e451585260",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Max Gordon <max.gordon@front.com>"
+    }
+  }
+}
